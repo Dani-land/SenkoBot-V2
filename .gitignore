@@ -1,0 +1,12 @@
+node_modules/
+sessions/
+jadi-sub/
+tmp/
+datos.json
+*.log
+.env
+.cache/
+.local/
+.config/
+package-lock.json
+yarn.lock
