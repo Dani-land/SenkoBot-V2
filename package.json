@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/Dani-land/SenkoBot-V2#readme",
   "dependencies": {
-    "@whiskeysockets/baileys": "github:gatanina-li/baileys",
+    "@whiskeysockets/baileys": "github:Ado21/bly",
     "@bochilteam/scraper": "^4.2.4",
     "@xct007/frieren-scraper": "^0.0.2",
     "acrcloud": "^1.4.0",
