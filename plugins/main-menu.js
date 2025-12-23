@@ -65,7 +65,7 @@ let handler = async (m, { conn, usedPrefix }) => {
 🔋 Tiempo encendida: *${uptime}*
 🤖 Estado: ${botStatus}
 
-❥ *Sígueme en github*:
+❥ *_sígueme en github_*:
 https://github.com/Dani-land
 ╰───────────────🌸╯\n`
 
