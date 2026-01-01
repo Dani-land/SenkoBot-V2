@@ -19,7 +19,7 @@ global.owner = [
 // <-- Número @s.whatsapp.net -->
   ['526242262017', 'Danielrxz', true],
 // <-- Número @lid -->
-  ['239041421299910', 'Danielrxz', true],
+  ['5216242262017', 'Danielrxz', true],
   ['', '', true], 
   ['', '', true]
 ];
