@@ -1,90 +1,100 @@
-import fs from 'fs'
-import path from 'path'
 import moment from 'moment-timezone'
-import fetch from 'node-fetch'
 
-let handler = async (m, { conn, usedPrefix }) => {
-
-  const name = await conn.getName(m.sender)
+let handler = async (m, { conn }) => {
+  const userId = m.mentionedJid?.[0] || m.sender
+  const user = global.db.data.users[userId] || {}
+  const name = await conn.getName(userId)
+  const botname = conn.user?.name || '✿ 𝑺𝒆𝒏𝒌𝒐𝑺𝒂𝒏'
   const fecha = moment.tz('America/California').format('DD/MM/YYYY')
   const hora = moment.tz('America/California').format('HH:mm:ss')
   const uptime = clockString(process.uptime() * 1000)
+  const totalreg = Object.keys(global.db.data.users).length
+  const limit = user.limite || 0
 
-  // 🤖 BOT PRINCIPAL O SUBBOT
-  const isPrincipal = conn.user.jid === global.conn.user.jid
-  const botType = isPrincipal ? '🤖 Bot Principal' : '🧩 Sub Bot'
+  const botTag = conn.user?.jid?.split('@')[0] || 'bot'
+  const isBotOfc = conn.user?.id === global.conn?.user?.id
+  const botStatus = isBotOfc
+    ? `✐ *Bot Oficial:* wa.me/${botTag}`
+    : `✐ *Sub Bot de:* wa.me/${global.conn?.user?.jid?.split('@')[0]}`
 
-  // 📂 LEER PLUGINS
-  const pluginsPath = path.join(process.cwd(), 'plugins')
-  const files = fs.readdirSync(pluginsPath).filter(f => f.endsWith('.js'))
+  const plugins = Object.entries(global.plugins)
+    .filter(([_, p]) => !p.disabled)
 
-  const categories = {}
+  const grouped = {}
 
-  for (const file of files) {
-    if (!file.includes('-')) continue
+  for (const [filename, plugin] of plugins) {
+    if (!filename.includes('-')) continue
 
-    const [cat, cmd] = file.replace('.js', '').split('-')
-    if (!categories[cat]) categories[cat] = []
-    categories[cat].push(cmd)
+    const [category, ...cmdParts] = filename.replace('.js', '').split('-')
+    const commandName = cmdParts.join('-')
+
+    if (!grouped[category]) grouped[category] = []
+    grouped[category].push(`✿ .${commandName}`)
   }
 
-  let menu = `
-╭─❀ 「 ${global.botname} 」 ❀─╮
-✐ Hola *${name}* 💖
-📌 Estado: ${botType}
-📅 Fecha: ${fecha}
-🕒 Hora: ${hora}
-🔋 Uptime: ${uptime}
-╰───────────────╯
-`
+  let text = `╭─❀「 *Menú Principal de ${global.botname}* 」❀─╮
+✐ Hola~ *${name}*~! ⊂⁠(⁠(⁠・⁠▽⁠・⁠)⁠)⁠⊃
+『✦』 Soy *Senko AI*, tu asistente
 
-  for (const cat of Object.keys(categories).sort()) {
-    const catName = cat.charAt(0).toUpperCase() + cat.slice(1)
+✐ Fecha: *${fecha}*
+✐ Hora México: *${hora}*
+✐ Usuarios activos: *${totalreg}*
+✐ Tu límite de hoy: *${limit}*
+✐ Tiempo encendida: *${uptime}*
+✐ Estado: ${botStatus}
 
-    menu += `\n╭─🍥 *${catName}* 🍥─╮\n`
-    for (const cmd of categories[cat].sort()) {
-      menu += `✿ ${usedPrefix}${cmd}\n`
+❥ *Sígueme en github*:
+https://github.com/Dani-land
+╰───────────────╯\n`
+
+  for (const category of Object.keys(grouped).sort()) {
+    text += `\n╭─🍥 *${category.toUpperCase()}* 🍥─╮\n`
+    for (const cmd of grouped[category].sort()) {
+      text += `⁠❍ ${cmd}\n`
     }
-    menu += `╰───────────────✿\n`
+    text += '╰───────────────✿\n'
   }
 
-  // 📌 PRIMERO: BANNER (IMAGEN)
+  const channelRD = {
+    id: '120363420575743790@newsletter',
+    name: '✿ 𝑺𝒆𝒏𝒌𝒐𝑨𝑰 𝑪𝒉𝒂𝒏𝒏𝒆𝒍 ♡'
+  }
+
+  const banner = global.banner || 'https://files.catbox.moe/u3hxp7.jpg'
+  const gif = global.gif || 'https://qu.ax/GzAr9'
+  const redes = 'https://www.instagram.com/dxnielrxz_77'
+  const textbot = `🍃 Gracias por usarme, *${name}*~`
+
   await conn.sendMessage(m.chat, {
-    image: { url: global.banner }, // ✅ banner por URL
-    caption: menu.trim(),
+    video: { url: gif },
+    gifPlayback: true,
+    caption: text,
     contextInfo: {
       forwardedNewsletterMessageInfo: {
-        newsletterJid: global.my.ch1,
-        newsletterName: global.my.name1,
+        newsletterJid: channelRD.id,
+        newsletterName: channelRD.name,
         serverMessageId: -1
       },
       externalAdReply: {
-        title: global.botname,
-        body: global.dev,
-        thumbnailUrl: global.banner,
+        title: botname,
+        body: textbot,
+        thumbnailUrl: banner,
+        sourceUrl: redes,
         mediaType: 1,
-        renderLargerThumbnail: true,
-        sourceUrl: global.redes
+        renderLargerThumbnail: true
       }
     }
-  }, { quoted: m })
-
-  // 📌 DESPUÉS: VIDEO
-  await conn.sendMessage(m.chat, {
-    video: { url: 'https://qu.ax/squFj' },
-    caption: '🍃 Gracias por usar *Senko AI*'
   }, { quoted: m })
 }
 
 handler.help = ['menu']
-handler.command = ['menu', 'menú', 'help']
 handler.tags = ['main']
-
+handler.command = ['menu', 'menú', 'help']
 export default handler
 
 function clockString(ms) {
-  let h = Math.floor(ms / 3600000)
-  let m = Math.floor(ms / 60000) % 60
-  let s = Math.floor(ms / 1000) % 60
+  let h = Math.floor(ms / (1000 * 60 * 60))
+  let m = Math.floor((ms / (1000 * 60)) % 60)
+  let s = Math.floor((ms / 1000) % 60)
   return `${h}h ${m}m ${s}s`
-}
+            }
